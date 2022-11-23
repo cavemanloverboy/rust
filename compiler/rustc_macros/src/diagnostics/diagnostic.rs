@@ -75,7 +75,11 @@ impl<'a> DiagnosticDerive<'a> {
                     self,
                     #handler: &'__diagnostic_handler_sess rustc_errors::Handler
                 ) -> rustc_errors::DiagnosticBuilder<'__diagnostic_handler_sess, G> {
-                    use rustc_errors::IntoDiagnosticArg;
+                    use rustc_errors::{
+                        IntoDiagnosticArg,
+                        IntoDiagnosticSpan,
+                        IntoDiagnosticMultiSpan,
+                    };
                     #implementation
                 }
             }
@@ -140,7 +144,11 @@ impl<'a> LintDiagnosticDerive<'a> {
                     self,
                     #diag: &'__b mut rustc_errors::DiagnosticBuilder<'__a, ()>
                 ) -> &'__b mut rustc_errors::DiagnosticBuilder<'__a, ()> {
-                    use rustc_errors::IntoDiagnosticArg;
+                    use rustc_errors::{
+                        IntoDiagnosticArg,
+                        IntoDiagnosticSpan,
+                        IntoDiagnosticMultiSpan,
+                    };
                     #implementation
                 }
 

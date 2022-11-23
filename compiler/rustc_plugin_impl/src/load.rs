@@ -54,7 +54,7 @@ fn load_plugin(
     let fun = dylink_registrar(lib).unwrap_or_else(|err| {
         // This is fatal: there are almost certainly macros we need inside this crate, so
         // continuing would spew "macro undefined" errors.
-        sess.emit_fatal(LoadPluginError { span: ident.span, msg: err.to_string() });
+        sess.emit_fatal(LoadPluginError { ident, msg: err.to_string() });
     });
     plugins.push(fun);
 }

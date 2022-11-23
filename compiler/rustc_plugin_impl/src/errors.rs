@@ -1,13 +1,13 @@
 //! Errors emitted by plugin_impl
 
 use rustc_macros::Diagnostic;
-use rustc_span::Span;
+use rustc_span::{symbol::Ident, Span};
 
 #[derive(Diagnostic)]
 #[diag(plugin_impl_load_plugin_error)]
 pub struct LoadPluginError {
     #[primary_span]
-    pub span: Span,
+    pub ident: Ident,
     pub msg: String,
 }
 

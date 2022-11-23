@@ -53,6 +53,48 @@ impl<'source> Into<FluentValue<'source>> for DiagnosticArgValue<'source> {
     }
 }
 
+/// Converts a value of a type into a `Span`. Implemented by types that can be used as spans for
+/// suggestions and labels (where `MultiSpan` isn't appropriate) in diagnostic derive macros.
+pub trait IntoDiagnosticSpan {
+    fn into_diagnostic_span(self) -> Span;
+}
+
+impl IntoDiagnosticSpan for Span {
+    fn into_diagnostic_span(self) -> Span {
+        self
+    }
+}
+
+impl IntoDiagnosticSpan for rustc_span::symbol::Ident {
+    fn into_diagnostic_span(self) -> Span {
+        self.span
+    }
+}
+
+/// Converts a value of a type into a `MultiSpan`. Implemented by types that can be used as spans
+/// in diagnostic derive macros (e.g. with `#[primary_span]` or `#[note]`).
+pub trait IntoDiagnosticMultiSpan {
+    fn into_diagnostic_multispan(self) -> MultiSpan;
+}
+
+impl<S: IntoDiagnosticSpan> IntoDiagnosticMultiSpan for S {
+    fn into_diagnostic_multispan(self) -> MultiSpan {
+        Into::into(self.into_diagnostic_span())
+    }
+}
+
+impl IntoDiagnosticMultiSpan for MultiSpan {
+    fn into_diagnostic_multispan(self) -> MultiSpan {
+        self
+    }
+}
+
+impl IntoDiagnosticMultiSpan for Vec<Span> {
+    fn into_diagnostic_multispan(self) -> MultiSpan {
+        MultiSpan::from_spans(self)
+    }
+}
+
 /// Trait implemented by error types. This should not be implemented manually. Instead, use
 /// `#[derive(Subdiagnostic)]` -- see [rustc_macros::Subdiagnostic].
 #[cfg_attr(bootstrap, rustc_diagnostic_item = "AddSubdiagnostic")]

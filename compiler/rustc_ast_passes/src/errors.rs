@@ -2,7 +2,7 @@
 
 use rustc_errors::{fluent, AddToDiagnostic, Applicability, Diagnostic, SubdiagnosticMessage};
 use rustc_macros::{Diagnostic, Subdiagnostic};
-use rustc_span::{Span, Symbol};
+use rustc_span::{symbol::Ident, Span, Symbol};
 
 use crate::ast_validation::ForbiddenLetReason;
 
@@ -35,15 +35,14 @@ pub struct ForbiddenAssocConstraint {
 #[diag(ast_passes_keyword_lifetime)]
 pub struct KeywordLifetime {
     #[primary_span]
-    pub span: Span,
+    pub ident: Ident,
 }
 
 #[derive(Diagnostic)]
 #[diag(ast_passes_invalid_label)]
 pub struct InvalidLabel {
     #[primary_span]
-    pub span: Span,
-    pub name: Symbol,
+    pub ident: Ident,
 }
 
 #[derive(Diagnostic)]

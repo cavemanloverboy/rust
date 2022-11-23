@@ -61,7 +61,7 @@ pub(crate) fn report_type_error(
     throw_span_err!(
         attr.span().unwrap(),
         &format!(
-            "the `#[{}{}]` attribute can only be applied to fields of type {}",
+            "the `#[{}{}]` attribute can only be applied to fields of type `{}`",
             name,
             match meta {
                 Meta::Path(_) => "",
@@ -73,42 +73,13 @@ pub(crate) fn report_type_error(
     );
 }
 
-/// Reports an error if the field's type does not match `path`.
-fn report_error_if_not_applied_to_ty(
-    attr: &Attribute,
-    info: &FieldInfo<'_>,
-    path: &[&str],
-    ty_name: &str,
-) -> Result<(), DiagnosticDeriveError> {
-    if !type_matches_path(&info.ty, path) {
-        report_type_error(attr, ty_name)?;
-    }
-
-    Ok(())
-}
-
 /// Reports an error if the field's type is not `Applicability`.
 pub(crate) fn report_error_if_not_applied_to_applicability(
     attr: &Attribute,
     info: &FieldInfo<'_>,
 ) -> Result<(), DiagnosticDeriveError> {
-    report_error_if_not_applied_to_ty(
-        attr,
-        info,
-        &["rustc_errors", "Applicability"],
-        "`Applicability`",
-    )
-}
-
-/// Reports an error if the field's type is not `Span`.
-pub(crate) fn report_error_if_not_applied_to_span(
-    attr: &Attribute,
-    info: &FieldInfo<'_>,
-) -> Result<(), DiagnosticDeriveError> {
-    if !type_matches_path(&info.ty, &["rustc_span", "Span"])
-        && !type_matches_path(&info.ty, &["rustc_errors", "MultiSpan"])
-    {
-        report_type_error(attr, "`Span` or `MultiSpan`")?;
+    if !type_matches_path(&info.ty, &["rustc_errors", "Applicability"]) {
+        report_type_error(attr, "Applicability")?;
     }
 
     Ok(())
@@ -195,7 +166,6 @@ impl<'ty> FieldInnerTy<'ty> {
 pub(crate) struct FieldInfo<'a> {
     pub(crate) binding: &'a BindingInfo<'a>,
     pub(crate) ty: &'a Type,
-    pub(crate) span: &'a proc_macro2::Span,
 }
 
 /// Small helper trait for abstracting over `Option` fields that contain a value and a `Span`

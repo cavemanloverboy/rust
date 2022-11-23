@@ -18,7 +18,7 @@ ast_passes_keyword_lifetime =
     lifetimes cannot use keyword names
 
 ast_passes_invalid_label =
-    invalid label name `{$name}`
+    invalid label name `{$ident}`
 
 ast_passes_invalid_visibility =
     unnecessary visibility qualifier

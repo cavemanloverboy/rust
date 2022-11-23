@@ -373,7 +373,8 @@ impl error::Error for ExplicitBug {}
 
 pub use diagnostic::{
     AddToDiagnostic, DecorateLint, Diagnostic, DiagnosticArg, DiagnosticArgValue, DiagnosticId,
-    DiagnosticStyledString, IntoDiagnosticArg, SubDiagnostic,
+    DiagnosticStyledString, IntoDiagnosticArg, IntoDiagnosticMultiSpan, IntoDiagnosticSpan,
+    SubDiagnostic,
 };
 pub use diagnostic_builder::{DiagnosticBuilder, EmissionGuarantee, Noted};
 pub use diagnostic_impls::{DiagnosticArgFromDisplay, DiagnosticSymbolList};

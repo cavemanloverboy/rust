@@ -6,8 +6,8 @@ use crate::diagnostics::error::{
 };
 use crate::diagnostics::utils::{
     build_field_mapping, is_doc_comment, new_code_ident,
-    report_error_if_not_applied_to_applicability, report_error_if_not_applied_to_span, FieldInfo,
-    FieldInnerTy, FieldMap, HasFieldMap, SetOnce, SpannedOption, SubdiagnosticKind,
+    report_error_if_not_applied_to_applicability, FieldInfo, FieldInnerTy, FieldMap, HasFieldMap,
+    SetOnce, SpannedOption, SubdiagnosticKind,
 };
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -93,7 +93,12 @@ impl SubdiagnosticDeriveBuilder {
                         rustc_errors::SubdiagnosticMessage
                     ) -> rustc_errors::SubdiagnosticMessage,
                 {
-                    use rustc_errors::{Applicability, IntoDiagnosticArg};
+                    use rustc_errors::{
+                        Applicability,
+                        IntoDiagnosticArg,
+                        IntoDiagnosticSpan,
+                        IntoDiagnosticMultiSpan,
+                    };
                     #implementation
                 }
             }
@@ -248,11 +253,7 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
                     return quote! {};
                 }
 
-                let info = FieldInfo {
-                    binding,
-                    ty: inner_ty.inner_type().unwrap_or(&ast.ty),
-                    span: &ast.span(),
-                };
+                let info = FieldInfo { binding, ty: inner_ty.inner_type().unwrap_or(&ast.ty) };
 
                 let generated = self
                     .generate_field_code_inner(kind_stats, attr, info, inner_ty.will_iterate())
@@ -308,8 +309,6 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
                         )
                         .emit();
                 } else {
-                    report_error_if_not_applied_to_span(attr, &info)?;
-
                     let binding = info.binding.binding.clone();
                     // FIXME(#100717): support `Option<Span>` on `primary_span` like in the
                     // diagnostic derive
@@ -404,8 +403,6 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
 
                 self.has_suggestion_parts = true;
 
-                report_error_if_not_applied_to_span(attr, &info)?;
-
                 let mut code = None;
                 for nested_attr in list.nested.iter() {
                     let NestedMeta::Meta(ref meta) = nested_attr else {
@@ -446,7 +443,7 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
                 } else {
                     quote! { #code_field }
                 };
-                Ok(quote! { suggestions.push((#binding, #code_field)); })
+                Ok(quote! { suggestions.push((#binding.into_diagnostic_span(), #code_field)); })
             }
             _ => throw_invalid_attr!(attr, &Meta::List(list), |diag| {
                 let mut span_attrs = vec![];
@@ -522,7 +519,15 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
 
                     if let Some(span) = span_field {
                         let style = suggestion_kind.to_suggestion_style();
-                        quote! { #diag.#name(#span, #message, #code_field, #applicability, #style); }
+                        quote! {
+                            #diag.#name(
+                                #span.into_diagnostic_span(),
+                                #message,
+                                #code_field,
+                                #applicability,
+                                #style,
+                            );
+                        }
                     } else {
                         span_err(self.span, "suggestion without `#[primary_span]` field").emit();
                         quote! { unreachable!(); }
@@ -549,7 +554,7 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
                 }
                 SubdiagnosticKind::Label => {
                     if let Some(span) = span_field {
-                        quote! { #diag.#name(#span, #message); }
+                        quote! { #diag.#name(#span.into_diagnostic_span(), #message); }
                     } else {
                         span_err(self.span, "label without `#[primary_span]` field").emit();
                         quote! { unreachable!(); }
@@ -557,7 +562,7 @@ impl<'parent, 'a> SubdiagnosticDeriveVariantBuilder<'parent, 'a> {
                 }
                 _ => {
                     if let Some(span) = span_field {
-                        quote! { #diag.#name(#span, #message); }
+                        quote! { #diag.#name(#span.into_diagnostic_multispan(), #message); }
                     } else {
                         quote! { #diag.#name(#message); }
                     }

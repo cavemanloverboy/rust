@@ -1,13 +1,12 @@
 #![deny(unused_must_use)]
 
 use crate::diagnostics::error::{
-    invalid_nested_attr, span_err, throw_invalid_attr, throw_invalid_nested_attr, throw_span_err,
+    invalid_nested_attr, span_err, throw_invalid_attr, throw_invalid_nested_attr,
     DiagnosticDeriveError,
 };
 use crate::diagnostics::utils::{
-    build_field_mapping, is_doc_comment, report_error_if_not_applied_to_span, report_type_error,
-    should_generate_set_arg, type_is_unit, type_matches_path, FieldInfo, FieldInnerTy, FieldMap,
-    HasFieldMap, SetOnce, SpannedOption, SubdiagnosticKind,
+    build_field_mapping, is_doc_comment, should_generate_set_arg, type_is_unit, type_matches_path,
+    FieldInfo, FieldInnerTy, FieldMap, HasFieldMap, SetOnce, SpannedOption, SubdiagnosticKind,
 };
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
@@ -325,7 +324,6 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
                         FieldInfo {
                             binding: binding_info,
                             ty: inner_ty.inner_type().unwrap_or(&field.ty),
-                            span: &field.span(),
                         },
                         binding,
                     )
@@ -358,10 +356,8 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
             (Meta::Path(_), "primary_span") => {
                 match self.parent.kind {
                     DiagnosticDeriveKind::Diagnostic { .. } => {
-                        report_error_if_not_applied_to_span(attr, &info)?;
-
                         return Ok(quote! {
-                            #diag.set_span(#binding);
+                            #diag.set_span(#binding.into_diagnostic_multispan());
                         });
                     }
                     DiagnosticDeriveKind::LintDiagnostic => {
@@ -423,16 +419,13 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
         let fn_ident = format_ident!("{}", subdiag);
         match subdiag {
             SubdiagnosticKind::Label => {
-                report_error_if_not_applied_to_span(attr, &info)?;
-                Ok(self.add_spanned_subdiagnostic(binding, &fn_ident, slug))
+                Ok(self.add_spanned_subdiagnostic(binding, &fn_ident, slug, false))
             }
             SubdiagnosticKind::Note | SubdiagnosticKind::Help | SubdiagnosticKind::Warn => {
-                if type_matches_path(&info.ty, &["rustc_span", "Span"]) {
-                    Ok(self.add_spanned_subdiagnostic(binding, &fn_ident, slug))
-                } else if type_is_unit(&info.ty) {
+                if type_is_unit(&info.ty) {
                     Ok(self.add_subdiagnostic(&fn_ident, slug))
                 } else {
-                    report_type_error(attr, "`Span` or `()`")?
+                    Ok(self.add_spanned_subdiagnostic(binding, &fn_ident, slug, true))
                 }
             }
             SubdiagnosticKind::Suggestion {
@@ -455,7 +448,7 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
                 self.formatting_init.extend(code_init);
                 Ok(quote! {
                     #diag.span_suggestions_with_style(
-                        #span_field,
+                        #span_field.into_diagnostic_span(),
                         rustc_errors::fluent::#slug,
                         #code_field,
                         #applicability,
@@ -474,12 +467,18 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
         field_binding: TokenStream,
         kind: &Ident,
         fluent_attr_identifier: Path,
+        multispan_allowed: bool,
     ) -> TokenStream {
         let diag = &self.parent.diag;
         let fn_name = format_ident!("span_{}", kind);
+        let span = if multispan_allowed {
+            quote! { #field_binding.into_diagnostic_multispan() }
+        } else {
+            quote! { #field_binding.into_diagnostic_span() }
+        };
         quote! {
             #diag.#fn_name(
-                #field_binding,
+                #span,
                 rustc_errors::fluent::#fluent_attr_identifier
             );
         }
@@ -499,12 +498,7 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
         info: FieldInfo<'_>,
     ) -> Result<(TokenStream, SpannedOption<TokenStream>), DiagnosticDeriveError> {
         match &info.ty {
-            // If `ty` is `Span` w/out applicability, then use `Applicability::Unspecified`.
-            ty @ Type::Path(..) if type_matches_path(ty, &["rustc_span", "Span"]) => {
-                let binding = &info.binding.binding;
-                Ok((quote!(#binding), None))
-            }
-            // If `ty` is `(Span, Applicability)` then return tokens accessing those.
+            // If `ty` is `(<ty>, Applicability)` then return tokens accessing those.
             Type::Tuple(tup) => {
                 let mut span_idx = None;
                 let mut applicability_idx = None;
@@ -520,12 +514,10 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
                 }
 
                 for (idx, elem) in tup.elems.iter().enumerate() {
-                    if type_matches_path(elem, &["rustc_span", "Span"]) {
-                        span_idx.set_once(syn::Index::from(idx), elem.span().unwrap());
-                    } else if type_matches_path(elem, &["rustc_errors", "Applicability"]) {
+                    if type_matches_path(elem, &["rustc_errors", "Applicability"]) {
                         applicability_idx.set_once(syn::Index::from(idx), elem.span().unwrap());
                     } else {
-                        type_err(&elem.span())?;
+                        span_idx.set_once(syn::Index::from(idx), elem.span().unwrap());
                     }
                 }
 
@@ -541,13 +533,11 @@ impl<'a> DiagnosticDeriveVariantBuilder<'a> {
 
                 Ok((span, Some((applicability, applicability_span))))
             }
-            // If `ty` isn't a `Span` or `(Span, Applicability)` then emit an error.
-            _ => throw_span_err!(info.span.unwrap(), "wrong field type for suggestion", |diag| {
-                diag.help(
-                    "`#[suggestion(...)]` should be applied to fields of type `Span` or \
-                     `(Span, Applicability)`",
-                )
-            }),
+            // If any other type w/out applicability, then use `Applicability::Unspecified`.
+            _ => {
+                let binding = &info.binding.binding;
+                Ok((quote!(#binding), None))
+            }
         }
     }
 }

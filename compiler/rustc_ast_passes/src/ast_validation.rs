@@ -259,13 +259,13 @@ impl<'a> AstValidator<'a> {
     fn check_lifetime(&self, ident: Ident) {
         let valid_names = [kw::UnderscoreLifetime, kw::StaticLifetime, kw::Empty];
         if !valid_names.contains(&ident.name) && ident.without_first_quote().is_reserved() {
-            self.session.emit_err(KeywordLifetime { span: ident.span });
+            self.session.emit_err(KeywordLifetime { ident });
         }
     }
 
     fn check_label(&self, ident: Ident) {
         if ident.without_first_quote().is_reserved() {
-            self.session.emit_err(InvalidLabel { span: ident.span, name: ident.name });
+            self.session.emit_err(InvalidLabel { ident });
         }
     }
 
