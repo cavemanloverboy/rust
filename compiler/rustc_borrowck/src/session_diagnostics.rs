@@ -1,5 +1,5 @@
 use rustc_errors::{codes::*, MultiSpan};
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::ty::{GenericArg, Ty};
 use rustc_span::Span;
 
@@ -46,7 +46,7 @@ pub(crate) struct GenericDoesNotLiveLongEnough {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(borrowck_var_does_not_need_mut)]
 pub(crate) struct VarNeedNotMut {
     #[suggestion(style = "short", applicability = "machine-applicable", code = "")]

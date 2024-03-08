@@ -10,10 +10,11 @@
 
 use super::elaborate;
 
+use crate::errors::ObjectUnsafety;
 use crate::infer::TyCtxtInferExt;
 use crate::traits::query::evaluate_obligation::InferCtxtExt;
 use crate::traits::{self, Obligation, ObligationCause};
-use rustc_errors::{DelayDm, FatalError, MultiSpan};
+use rustc_errors::FatalError;
 use rustc_hir as hir;
 use rustc_hir::def_id::DefId;
 use rustc_middle::query::Providers;
@@ -165,36 +166,7 @@ fn lint_object_unsafe_trait(
         WHERE_CLAUSES_OBJECT_SAFETY,
         hir::CRATE_HIR_ID,
         span,
-        DelayDm(|| format!("the trait `{}` cannot be made into an object", tcx.def_path_str(trait_def_id))),
-        |err| {
-            let node = tcx.hir().get_if_local(trait_def_id);
-            let mut spans = MultiSpan::from_span(span);
-            if let Some(hir::Node::Item(item)) = node {
-                spans.push_span_label(
-                    item.ident.span,
-                    "this trait cannot be made into an object...",
-                );
-                spans.push_span_label(span, format!("...because {}", violation.error_msg()));
-            } else {
-                spans.push_span_label(
-                    span,
-                    format!(
-                        "the trait cannot be made into an object because {}",
-                        violation.error_msg()
-                    ),
-                );
-            };
-            err.span_note(
-                spans,
-                "for a trait to be \"object safe\" it needs to allow building a vtable to allow the \
-                call to be resolvable dynamically; for more information visit \
-                <https://doc.rust-lang.org/reference/items/traits.html#object-safety>",
-            );
-            if node.is_some() {
-                // Only provide the help if its a local trait, otherwise it's not
-                violation.solution().add_to(err);
-            }
-        },
+        ObjectUnsafety { tcx, span, trait_def_id, violation },
     );
 }
 

@@ -1,5 +1,4 @@
-use rustc_errors::{AddToDiagnostic, Diag, EmissionGuarantee, SubdiagMessageOp};
-use rustc_macros::{LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::thir::Pat;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
@@ -46,7 +45,7 @@ impl<'tcx> Uncovered<'tcx> {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(pattern_analysis_overlapping_range_endpoints)]
 #[note]
 pub struct OverlappingRangeEndpoints<'tcx> {
@@ -56,27 +55,15 @@ pub struct OverlappingRangeEndpoints<'tcx> {
     pub overlap: Vec<Overlap<'tcx>>,
 }
 
+#[derive(Subdiagnostic)]
+#[label(pattern_analysis_range)]
 pub struct Overlap<'tcx> {
+    #[primary_span]
     pub span: Span,
     pub range: Pat<'tcx>,
 }
 
-impl<'tcx> AddToDiagnostic for Overlap<'tcx> {
-    fn add_to_diagnostic_with<G: EmissionGuarantee, F: SubdiagMessageOp<G>>(
-        self,
-        diag: &mut Diag<'_, G>,
-        _: F,
-    ) {
-        let Overlap { span, range } = self;
-
-        // FIXME(mejrs) unfortunately `#[derive(LintDiagnostic)]`
-        // does not support `#[subdiagnostic(eager)]`...
-        let message = format!("this range overlaps on `{range}`...");
-        diag.span_label(span, message);
-    }
-}
-
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(pattern_analysis_non_exhaustive_omitted_pattern)]
 #[help]
 #[note]
@@ -86,10 +73,12 @@ pub(crate) struct NonExhaustiveOmittedPattern<'tcx> {
     pub uncovered: Uncovered<'tcx>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(pattern_analysis_non_exhaustive_omitted_pattern_lint_on_arm)]
 #[help]
 pub(crate) struct NonExhaustiveOmittedPatternLintOnArm {
+    #[primary_span]
+    pub span: Span,
     #[label]
     pub lint_span: Span,
     #[suggestion(code = "#[{lint_level}({lint_name})]\n", applicability = "maybe-incorrect")]

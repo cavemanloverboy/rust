@@ -4,7 +4,7 @@ use rustc_errors::{
     codes::*, Diag, DiagArgValue, DiagCtxt, DiagMessage, EmissionGuarantee, IntoDiagnostic, Level,
 };
 use rustc_hir::ConstContext;
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::mir::interpret::{
     CheckInAllocMsg, ExpectedKind, InterpError, InvalidMetaKind, InvalidProgramInfo, Misalignment,
     PointerKind, ResourceExhaustionInfo, UndefinedBehaviorInfo, UnsupportedOpInfo,
@@ -214,7 +214,7 @@ pub(crate) struct InteriorMutabilityBorrow {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(const_eval_long_running)]
 #[note]
 pub struct LongRunning {
@@ -394,7 +394,7 @@ pub struct ConstEvalError {
     pub frame_notes: Vec<FrameNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(const_eval_write_through_immutable_pointer)]
 pub struct WriteThroughImmutablePointer {
     #[subdiagnostic]

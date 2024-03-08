@@ -311,7 +311,7 @@ pub enum AppendConstMessage {
     Custom(Symbol, Span),
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(trait_selection_malformed_on_unimplemented_attr)]
 #[help]
 pub struct MalformedOnUnimplementedAttrLint {
@@ -325,12 +325,12 @@ impl MalformedOnUnimplementedAttrLint {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(trait_selection_missing_options_for_on_unimplemented_attr)]
 #[help]
 pub struct MissingOptionsForOnUnimplementedAttr;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(trait_selection_ignored_diagnostic_option)]
 pub struct IgnoredDiagnosticOption {
     pub option_name: &'static str,
@@ -359,7 +359,7 @@ impl IgnoredDiagnosticOption {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(trait_selection_unknown_format_parameter_for_on_unimplemented_attr)]
 #[help]
 pub struct UnknownFormatParameterForOnUnimplementedAttr {

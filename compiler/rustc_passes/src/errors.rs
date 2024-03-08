@@ -10,7 +10,7 @@ use rustc_errors::{
     IntoDiagnostic, Level, MultiSpan, SubdiagMessageOp,
 };
 use rustc_hir::{self as hir, ExprKind, Target};
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::ty::{MainDefinition, Ty};
 use rustc_span::{Span, Symbol, DUMMY_SP};
 
@@ -24,31 +24,31 @@ pub struct IncorrectDoNotRecommendLocation {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_outer_crate_level_attr)]
 pub struct OuterCrateLevelAttr;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_inner_crate_level_attr)]
 pub struct InnerCrateLevelAttr;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_ignored_attr_with_macro)]
 pub struct IgnoredAttrWithMacro<'a> {
     pub sym: &'a str,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_ignored_attr)]
 pub struct IgnoredAttr<'a> {
     pub sym: &'a str,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_inline_ignored_function_prototype)]
 pub struct IgnoredInlineAttrFnProto;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_inline_ignored_constants)]
 #[warning]
 #[note]
@@ -63,15 +63,15 @@ pub struct InlineNotFnOrClosure {
     pub defn_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_coverage_ignored_function_prototype)]
 pub struct IgnoredCoverageFnProto;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_coverage_propagate)]
 pub struct IgnoredCoveragePropagate;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_coverage_fn_defn)]
 pub struct IgnoredCoverageFnDefn;
 
@@ -129,7 +129,7 @@ pub struct AttrShouldBeAppliedToTrait {
     pub defn_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_target_feature_on_statement)]
 pub struct TargetFeatureOnStatement;
 
@@ -192,7 +192,7 @@ pub struct DocAliasNotAnAlias<'a> {
     pub attr_str: &'a str,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_alias_duplicated)]
 pub struct DocAliasDuplicated {
     #[label]
@@ -257,7 +257,7 @@ pub struct DocKeywordConflict {
     pub spans: MultiSpan,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_inline_only_use)]
 #[note]
 pub struct DocInlineOnlyUse {
@@ -267,7 +267,7 @@ pub struct DocInlineOnlyUse {
     pub item_span: Option<Span>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_masked_only_extern_crate)]
 #[note]
 pub struct DocMaskedOnlyExternCrate {
@@ -277,7 +277,7 @@ pub struct DocMaskedOnlyExternCrate {
     pub item_span: Option<Span>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_masked_not_extern_crate_self)]
 pub struct DocMaskedNotExternCrateSelf {
     #[label]
@@ -294,31 +294,31 @@ pub struct DocAttrNotCrateLevel<'a> {
     pub attr_name: &'a str,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_test_unknown)]
 pub struct DocTestUnknown {
     pub path: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_test_literal)]
 pub struct DocTestLiteral;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_test_takes_list)]
 pub struct DocTestTakesList;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_cfg_hide_takes_list)]
 pub struct DocCfgHideTakesList;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_test_unknown_any)]
 pub struct DocTestUnknownAny {
     pub path: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_test_unknown_spotlight)]
 #[note]
 #[note(passes_no_op_note)]
@@ -328,7 +328,7 @@ pub struct DocTestUnknownSpotlight {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_test_unknown_include)]
 pub struct DocTestUnknownInclude {
     pub path: String,
@@ -338,7 +338,7 @@ pub struct DocTestUnknownInclude {
     pub sugg: (Span, Applicability),
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_doc_invalid)]
 pub struct DocInvalid;
 
@@ -390,14 +390,14 @@ pub struct FfiConstInvalidTarget {
     pub attr_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_must_use_async)]
 pub struct MustUseAsync {
     #[label]
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_must_use_no_effect)]
 pub struct MustUseNoEffect {
     pub article: &'static str,
@@ -413,7 +413,7 @@ pub struct MustNotSuspend {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_cold)]
 #[warning]
 pub struct Cold {
@@ -422,7 +422,7 @@ pub struct Cold {
     pub on_crate: bool,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_link)]
 #[warning]
 pub struct Link {
@@ -430,7 +430,7 @@ pub struct Link {
     pub span: Option<Span>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_link_name)]
 #[warning]
 pub struct LinkName<'a> {
@@ -516,7 +516,7 @@ pub struct RustcDirtyClean {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_link_section)]
 #[warning]
 pub struct LinkSection {
@@ -524,7 +524,7 @@ pub struct LinkSection {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_no_mangle_foreign)]
 #[warning]
 #[note]
@@ -536,7 +536,7 @@ pub struct NoMangleForeign {
     pub foreign_item_kind: &'static str,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_no_mangle)]
 #[warning]
 pub struct NoMangle {
@@ -558,7 +558,7 @@ pub struct ReprConflicting {
     pub hint_spans: Vec<Span>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_repr_conflicting, code = E0566)]
 pub struct ReprConflictingLint;
 
@@ -684,17 +684,17 @@ pub struct StabilityPromotable {
     pub attr_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_deprecated)]
 pub struct Deprecated;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_macro_use)]
 pub struct MacroUse {
     pub name: Symbol,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 pub enum MacroExport {
     #[diag(passes_macro_export)]
     Normal,
@@ -720,7 +720,7 @@ pub enum UnusedNote {
     DefaultMethodBodyConst,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused)]
 pub struct Unused {
     #[suggestion(code = "", applicability = "machine-applicable")]
@@ -737,7 +737,7 @@ pub struct NonExportedMacroInvalidAttrs {
     pub attr_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_duplicate)]
 pub struct UnusedDuplicate {
     #[suggestion(code = "", applicability = "machine-applicable")]
@@ -786,7 +786,7 @@ pub struct CollapseDebuginfo {
     pub defn_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_deprecated_annotation_has_no_effect)]
 pub struct DeprecatedAnnotationHasNoEffect {
     #[suggestion(applicability = "machine-applicable", code = "")]
@@ -1131,7 +1131,7 @@ pub struct CannotInlineNakedFunction {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_undefined_naked_function_abi)]
 pub struct UndefinedNakedFunctionAbi;
 
@@ -1387,14 +1387,14 @@ pub struct IncorrectTarget<'a> {
     pub at_least: bool,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_useless_assignment)]
 pub struct UselessAssignment<'a> {
     pub is_field_assign: bool,
     pub ty: Ty<'a>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_only_has_effect_on)]
 pub struct OnlyHasEffectOn {
     pub attr_name: Symbol,
@@ -1557,7 +1557,7 @@ pub struct MissingConstErr {
     pub const_span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 pub enum MultipleDeadCodes<'tcx> {
     #[diag(passes_dead_codes)]
     DeadCodes {
@@ -1628,7 +1628,7 @@ pub struct SkippingConstChecks {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unreachable_due_to_uninhabited)]
 pub struct UnreachableDueToUninhabited<'desc, 'tcx> {
     pub descr: &'desc str,
@@ -1640,21 +1640,21 @@ pub struct UnreachableDueToUninhabited<'desc, 'tcx> {
     pub ty: Ty<'tcx>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_var_maybe_capture_ref)]
 #[help]
 pub struct UnusedVarMaybeCaptureRef {
     pub name: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_capture_maybe_capture_ref)]
 #[help]
 pub struct UnusedCaptureMaybeCaptureRef {
     pub name: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_var_remove_field)]
 pub struct UnusedVarRemoveField {
     pub name: String,
@@ -1672,21 +1672,21 @@ pub struct UnusedVarRemoveFieldSugg {
     pub spans: Vec<Span>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_var_assigned_only)]
 #[note]
 pub struct UnusedVarAssignedOnly {
     pub name: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unnecessary_stable_feature)]
 pub struct UnnecessaryStableFeature {
     pub feature: Symbol,
     pub since: Symbol,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unnecessary_partial_stable_feature)]
 pub struct UnnecessaryPartialStableFeature {
     #[suggestion(code = "{implies}", applicability = "maybe-incorrect")]
@@ -1698,26 +1698,26 @@ pub struct UnnecessaryPartialStableFeature {
     pub implies: Symbol,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_ineffective_unstable_impl)]
 #[note]
 pub struct IneffectiveUnstableImpl;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_assign)]
 #[help]
 pub struct UnusedAssign {
     pub name: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_assign_passed)]
 #[help]
 pub struct UnusedAssignPassed {
     pub name: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_variable_try_prefix)]
 pub struct UnusedVariableTryPrefix {
     #[label]
@@ -1766,7 +1766,7 @@ impl AddToDiagnostic for UnusedVariableStringInterp {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_unused_variable_try_ignore)]
 pub struct UnusedVarTryIgnore {
     #[subdiagnostic]
@@ -1783,7 +1783,7 @@ pub struct UnusedVarTryIgnoreSugg {
     pub name: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(passes_attr_crate_level)]
 #[note]
 pub struct AttrCrateLevelOnly {

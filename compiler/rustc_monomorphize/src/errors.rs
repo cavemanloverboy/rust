@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::fluent_generated as fluent;
 use rustc_errors::{Diag, DiagCtxt, EmissionGuarantee, IntoDiagnostic, Level};
-use rustc_macros::{Diagnostic, LintDiagnostic};
+use rustc_macros::Diagnostic;
 use rustc_span::{Span, Symbol};
 
 #[derive(Diagnostic)]
@@ -62,7 +62,7 @@ impl<G: EmissionGuarantee> IntoDiagnostic<'_, G> for UnusedGenericParamsHint {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(monomorphize_large_assignments)]
 #[note]
 pub struct LargeAssignmentsLint {

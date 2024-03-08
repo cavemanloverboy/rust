@@ -4,13 +4,13 @@ use rustc_errors::{
     codes::*, AddToDiagnostic, Applicability, Diag, DiagCtxt, EmissionGuarantee, IntoDiagnostic,
     Level, MultiSpan, SubdiagMessageOp,
 };
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::ty::{self, Ty};
 use rustc_pattern_analysis::{errors::Uncovered, rustc::RustcMatchCheckCtxt};
 use rustc_span::symbol::Symbol;
 use rustc_span::Span;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unconditional_recursion)]
 #[help]
 pub struct UnconditionalRecursion {
@@ -20,7 +20,7 @@ pub struct UnconditionalRecursion {
     pub call_sites: Vec<Span>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_call_to_unsafe_fn_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnCallToUnsafeFunctionRequiresUnsafe {
@@ -31,7 +31,7 @@ pub struct UnsafeOpInUnsafeFnCallToUnsafeFunctionRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_call_to_unsafe_fn_requires_unsafe_nameless)]
 #[note]
 pub struct UnsafeOpInUnsafeFnCallToUnsafeFunctionRequiresUnsafeNameless {
@@ -41,7 +41,7 @@ pub struct UnsafeOpInUnsafeFnCallToUnsafeFunctionRequiresUnsafeNameless {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_inline_assembly_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnUseOfInlineAssemblyRequiresUnsafe {
@@ -51,7 +51,7 @@ pub struct UnsafeOpInUnsafeFnUseOfInlineAssemblyRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_initializing_type_with_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnInitializingTypeWithRequiresUnsafe {
@@ -61,7 +61,7 @@ pub struct UnsafeOpInUnsafeFnInitializingTypeWithRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_mutable_static_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnUseOfMutableStaticRequiresUnsafe {
@@ -71,7 +71,7 @@ pub struct UnsafeOpInUnsafeFnUseOfMutableStaticRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_extern_static_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnUseOfExternStaticRequiresUnsafe {
@@ -81,7 +81,7 @@ pub struct UnsafeOpInUnsafeFnUseOfExternStaticRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_deref_raw_pointer_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnDerefOfRawPointerRequiresUnsafe {
@@ -91,7 +91,7 @@ pub struct UnsafeOpInUnsafeFnDerefOfRawPointerRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_union_field_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnAccessToUnionFieldRequiresUnsafe {
@@ -101,7 +101,7 @@ pub struct UnsafeOpInUnsafeFnAccessToUnionFieldRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_mutation_of_layout_constrained_field_requires_unsafe)]
 #[note]
 pub struct UnsafeOpInUnsafeFnMutationOfLayoutConstrainedFieldRequiresUnsafe {
@@ -111,7 +111,7 @@ pub struct UnsafeOpInUnsafeFnMutationOfLayoutConstrainedFieldRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_borrow_of_layout_constrained_field_requires_unsafe)]
 pub struct UnsafeOpInUnsafeFnBorrowOfLayoutConstrainedFieldRequiresUnsafe {
     #[label]
@@ -120,7 +120,7 @@ pub struct UnsafeOpInUnsafeFnBorrowOfLayoutConstrainedFieldRequiresUnsafe {
     pub unsafe_not_inherited_note: Option<UnsafeNotInheritedLintNote>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unsafe_op_in_unsafe_fn_call_to_fn_with_requires_unsafe)]
 #[help]
 pub struct UnsafeOpInUnsafeFnCallToFunctionWithRequiresUnsafe {
@@ -436,7 +436,7 @@ impl AddToDiagnostic for UnsafeNotInheritedLintNote {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unused_unsafe)]
 pub struct UnusedUnsafe {
     #[label]
@@ -566,7 +566,7 @@ pub struct NonConstPath {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_unreachable_pattern)]
 pub struct UnreachablePattern {
     #[label]
@@ -617,7 +617,7 @@ pub struct LowerRangeBoundMustBeLessThanUpper {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_leading_irrefutable_let_patterns)]
 #[note]
 #[help]
@@ -625,7 +625,7 @@ pub struct LeadingIrrefutableLetPatterns {
     pub count: usize,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_trailing_irrefutable_let_patterns)]
 #[note]
 #[help]
@@ -633,7 +633,7 @@ pub struct TrailingIrrefutableLetPatterns {
     pub count: usize,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_bindings_with_variant_name, code = E0170)]
 pub struct BindingsWithVariantName {
     #[suggestion(code = "{ty_path}::{name}", applicability = "machine-applicable")]
@@ -642,7 +642,7 @@ pub struct BindingsWithVariantName {
     pub name: Symbol,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_irrefutable_let_patterns_if_let)]
 #[note]
 #[help]
@@ -650,7 +650,7 @@ pub struct IrrefutableLetPatternsIfLet {
     pub count: usize,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_irrefutable_let_patterns_if_let_guard)]
 #[note]
 #[help]
@@ -658,7 +658,7 @@ pub struct IrrefutableLetPatternsIfLetGuard {
     pub count: usize,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_irrefutable_let_patterns_let_else)]
 #[note]
 #[help]
@@ -666,7 +666,7 @@ pub struct IrrefutableLetPatternsLetElse {
     pub count: usize,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_irrefutable_let_patterns_while_let)]
 #[note]
 #[help]
@@ -797,7 +797,7 @@ pub struct NaNPattern {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_pointer_pattern)]
 pub struct PointerPattern;
 
@@ -811,7 +811,7 @@ pub struct NonEmptyNeverPattern<'tcx> {
     pub ty: Ty<'tcx>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_indirect_structural_match)]
 #[note(mir_build_type_not_structural_tip)]
 #[note(mir_build_type_not_structural_more_info)]
@@ -819,7 +819,7 @@ pub struct IndirectStructuralMatch<'tcx> {
     pub non_sm_ty: Ty<'tcx>,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_build_nontrivial_structural_match)]
 #[note(mir_build_type_not_structural_tip)]
 #[note(mir_build_type_not_structural_more_info)]

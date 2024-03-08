@@ -121,23 +121,6 @@ decl_derive!(
         suggestion_verbose)] => diagnostics::session_diagnostic_derive
 );
 decl_derive!(
-    [LintDiagnostic, attributes(
-        // struct attributes
-        diag,
-        help,
-        note,
-        warning,
-        // field attributes
-        skip_arg,
-        primary_span,
-        label,
-        subdiagnostic,
-        suggestion,
-        suggestion_short,
-        suggestion_hidden,
-        suggestion_verbose)] => diagnostics::lint_diagnostic_derive
-);
-decl_derive!(
     [Subdiagnostic, attributes(
         // struct/variant attributes
         label,

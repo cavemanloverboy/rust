@@ -20,7 +20,7 @@ use crate::traits::{
     self, coherence, FutureCompatOverlapErrorKind, ObligationCause, ObligationCtxt,
 };
 use rustc_data_structures::fx::FxIndexSet;
-use rustc_errors::{codes::*, DelayDm, Diag, EmissionGuarantee};
+use rustc_errors::{codes::*, DelayDm, Diag, DiagCtxt, EmissionGuarantee, IntoDiagnostic, Level};
 use rustc_hir::def_id::{DefId, LocalDefId};
 use rustc_middle::ty::{self, ImplSubject, Ty, TyCtxt, TypeVisitableExt};
 use rustc_middle::ty::{GenericArgs, GenericArgsRef};
@@ -458,14 +458,38 @@ fn report_conflicting_impls<'tcx>(
         )
     });
 
+    struct ConflictingImpls<'tcx, 'a, F> {
+        tcx: TyCtxt<'tcx>,
+        msg: DelayDm<F>,
+        impl_span: Span,
+        overlap: &'a OverlapError<'tcx>,
+    }
+
+    impl<'tcx, 'a, EG, F> IntoDiagnostic<'tcx, EG> for ConflictingImpls<'tcx, 'a, F>
+    where
+        EG: EmissionGuarantee,
+        F: FnOnce() -> String,
+    {
+        fn into_diagnostic(self, dcx: &'tcx DiagCtxt, level: Level) -> Diag<'tcx, EG> {
+            let mut diag = Diag::new(dcx, level, self.msg);
+            diag.span(self.impl_span);
+            decorate(self.tcx, self.overlap, self.impl_span, &mut diag);
+            diag
+        }
+    }
+
     match used_to_be_allowed {
         None => {
             let reported = if overlap.with_impl.is_local()
                 || tcx.ensure().orphan_check_impl(impl_def_id).is_ok()
             {
-                let mut err = tcx.dcx().struct_span_err(impl_span, msg);
+                let mut err = tcx.dcx().create_err(ConflictingImpls {
+                    tcx,
+                    msg,
+                    overlap: &overlap,
+                    impl_span,
+                });
                 err.code(E0119);
-                decorate(tcx, &overlap, impl_span, &mut err);
                 err.emit()
             } else {
                 tcx.dcx().span_delayed_bug(impl_span, "impl should have failed the orphan check")
@@ -481,10 +505,7 @@ fn report_conflicting_impls<'tcx>(
                 lint,
                 tcx.local_def_id_to_hir_id(impl_def_id),
                 impl_span,
-                msg,
-                |err| {
-                    decorate(tcx, &overlap, impl_span, err);
-                },
+                ConflictingImpls { tcx, msg, overlap: &overlap, impl_span },
             );
             Ok(())
         }

@@ -90,18 +90,13 @@ pub(crate) fn lint_nonexhaustive_missing_variants<'p, 'tcx>(
             let (lint_level, lint_level_source) =
                 rcx.tcx.lint_level_at_node(NON_EXHAUSTIVE_OMITTED_PATTERNS, arm.arm_data);
             if !matches!(lint_level, rustc_session::lint::Level::Allow) {
-                let decorator = NonExhaustiveOmittedPatternLintOnArm {
+                rcx.tcx.dcx().emit_warn(NonExhaustiveOmittedPatternLintOnArm {
+                    span: arm.pat.data().unwrap().span,
                     lint_span: lint_level_source.span(),
                     suggest_lint_on_match: rcx.whole_match_span.map(|span| span.shrink_to_lo()),
                     lint_level: lint_level.as_str(),
                     lint_name: "non_exhaustive_omitted_patterns",
-                };
-
-                use rustc_errors::DecorateLint;
-                let mut err = rcx.tcx.dcx().struct_span_warn(arm.pat.data().unwrap().span, "");
-                err.primary_message(decorator.msg());
-                decorator.decorate_lint(&mut err);
-                err.emit();
+                });
             }
         }
     }

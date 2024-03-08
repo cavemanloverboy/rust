@@ -1,6 +1,8 @@
 use crate::check::intrinsicck::InlineAsmCtxt;
 use crate::errors::LinkageType;
 
+use self::errors::{TransparentExternalPrivateFields, TransparentExternalPrivateFieldsKind};
+
 use super::compare_impl_item::check_type_bounds;
 use super::compare_impl_item::{compare_impl_method, compare_impl_ty};
 use super::*;
@@ -50,8 +52,7 @@ pub fn check_abi(tcx: TyCtxt<'_>, hir_id: hir::HirId, span: Span, abi: Abi) {
                 UNSUPPORTED_CALLING_CONVENTIONS,
                 hir_id,
                 span,
-                "use of calling convention not supported on this target",
-                |_| {},
+                errors::UnsupportedCallingConventions,
             );
         }
     }
@@ -243,11 +244,7 @@ fn check_static_inhabited(tcx: TyCtxt<'_>, def_id: LocalDefId) {
             UNINHABITED_STATIC,
             tcx.local_def_id_to_hir_id(def_id),
             span,
-            "static of uninhabited type",
-            |lint| {
-                lint
-                .note("uninhabited statics cannot be initialized, and any access would be an immediate error");
-            },
+            errors::UninhabitedStatic,
         );
     }
 }
@@ -1137,20 +1134,16 @@ pub(super) fn check_transparent<'tcx>(tcx: TyCtxt<'tcx>, adt: ty::AdtDef<'tcx>) 
                     REPR_TRANSPARENT_EXTERNAL_PRIVATE_FIELDS,
                     tcx.local_def_id_to_hir_id(adt.did().expect_local()),
                     span,
-                    "zero-sized fields in `repr(transparent)` cannot \
-                    contain external non-exhaustive types",
-                    |lint| {
-                        let note = if non_exhaustive {
-                            "is marked with `#[non_exhaustive]`"
+                    TransparentExternalPrivateFields {
+                        tcx,
+                        def_id,
+                        args,
+                        descr,
+                        kind: if non_exhaustive {
+                            TransparentExternalPrivateFieldsKind::NonExhaustive
                         } else {
-                            "contains private fields"
-                        };
-                        let field_ty = tcx.def_path_str_with_args(def_id, args);
-                        lint.note(format!(
-                            "this {descr} contains `{field_ty}`, which {note}, \
-                                and makes it not a breaking change to become \
-                                non-zero-sized in the future."
-                        ));
+                            TransparentExternalPrivateFieldsKind::Exhaustive
+                        },
                     },
                 )
             } else {

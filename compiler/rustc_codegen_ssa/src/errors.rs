@@ -1031,3 +1031,10 @@ pub struct FailedToGetLayout<'tcx> {
 pub struct ErrorCreatingRemarkDir {
     pub error: std::io::Error,
 }
+
+#[derive(Diagnostic)]
+#[diag(codegen_ssa_inline_no_sanitize)]
+pub struct InlineNoSanitize {
+    #[label]
+    pub inline_span: Span,
+}

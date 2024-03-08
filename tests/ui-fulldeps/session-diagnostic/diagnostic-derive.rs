@@ -19,7 +19,7 @@ use rustc_span::Span;
 
 extern crate rustc_fluent_macro;
 extern crate rustc_macros;
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 
 extern crate rustc_middle;
 use rustc_middle::ty::Ty;
@@ -553,18 +553,6 @@ struct LabelWithTrailingList {
     span: Span,
 }
 
-#[derive(LintDiagnostic)]
-#[diag(no_crate_example)]
-struct LintsGood {}
-
-#[derive(LintDiagnostic)]
-#[diag(no_crate_example)]
-struct PrimarySpanOnLint {
-    #[primary_span]
-    //~^ ERROR `#[primary_span]` is not a valid attribute
-    span: Span,
-}
-
 #[derive(Diagnostic)]
 #[diag(no_crate_example, code = E0123)]
 struct ErrorWithMultiSpan {
@@ -599,14 +587,6 @@ struct WarnAttribute {}
 //~| ERROR diagnostic slug not specified
 //~| ERROR cannot find attribute `lint` in this scope
 struct LintAttributeOnSessionDiag {}
-
-#[derive(LintDiagnostic)]
-#[lint(no_crate_example, code = E0123)]
-//~^ ERROR `#[lint(...)]` is not a valid attribute
-//~| ERROR `#[lint(...)]` is not a valid attribute
-//~| ERROR diagnostic slug not specified
-//~| ERROR cannot find attribute `lint` in this scope
-struct LintAttributeOnLintDiag {}
 
 #[derive(Diagnostic)]
 #[diag(no_crate_example, code = E0123)]
@@ -725,14 +705,6 @@ struct SubdiagnosticBadTwice {
 #[diag(no_crate_example)]
 struct SubdiagnosticBadLitStr {
     #[subdiagnostic("bad")]
-    //~^ ERROR `#[subdiagnostic(...)]` is not a valid attribute
-    note: Note,
-}
-
-#[derive(LintDiagnostic)]
-#[diag(no_crate_example)]
-struct SubdiagnosticEagerLint {
-    #[subdiagnostic(eager)]
     //~^ ERROR `#[subdiagnostic(...)]` is not a valid attribute
     note: Note,
 }

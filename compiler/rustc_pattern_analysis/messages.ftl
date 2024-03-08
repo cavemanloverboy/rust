@@ -11,6 +11,8 @@ pattern_analysis_overlapping_range_endpoints = multiple patterns overlap on thei
     .label = ... with this range
     .note = you likely meant to write mutually exclusive ranges
 
+pattern_analysis_range = this range overlaps on `{$range}`...
+
 pattern_analysis_uncovered = {$count ->
         [1] pattern `{$witness_1}`
         [2] patterns `{$witness_1}` and `{$witness_2}`

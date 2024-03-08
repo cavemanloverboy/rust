@@ -1,5 +1,5 @@
 use rustc_errors::{codes::*, DiagArgFromDisplay};
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_span::{Span, Symbol};
 
 #[derive(Diagnostic)]
@@ -68,7 +68,7 @@ pub struct ReportEffectiveVisibility {
     pub descr: String,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(privacy_from_private_dep_in_public_interface)]
 pub struct FromPrivateDependencyInPublicInterface<'a> {
     pub kind: &'a str,
@@ -76,7 +76,7 @@ pub struct FromPrivateDependencyInPublicInterface<'a> {
     pub krate: Symbol,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(privacy_unnameable_types_lint)]
 pub struct UnnameableTypesLint<'a> {
     #[label]
@@ -90,7 +90,7 @@ pub struct UnnameableTypesLint<'a> {
 // Used for `private_interfaces` and `private_bounds` lints.
 // They will replace private-in-public errors and compatibility lints in future.
 // See https://rust-lang.github.io/rfcs/2145-type-privacy.html for more details.
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(privacy_private_interface_or_bounds_lint)]
 pub struct PrivateInterfacesOrBoundsLint<'a> {
     #[label(privacy_item_label)]

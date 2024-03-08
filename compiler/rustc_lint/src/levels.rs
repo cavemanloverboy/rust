@@ -16,7 +16,7 @@ use crate::{
 use rustc_ast as ast;
 use rustc_ast_pretty::pprust;
 use rustc_data_structures::fx::FxIndexMap;
-use rustc_errors::{DecorateLint, Diag, DiagMessage, MultiSpan};
+use rustc_errors::{IntoDiagnostic, MultiSpan};
 use rustc_feature::{Features, GateIssue};
 use rustc_hir as hir;
 use rustc_hir::intravisit::{self, Visitor};
@@ -1103,36 +1103,31 @@ impl<'s, P: LintLevelsProvider> LintLevelsBuilder<'s, P> {
     /// [`lint_level`]: rustc_middle::lint::lint_level#decorate-signature
     #[rustc_lint_diagnostics]
     #[track_caller]
-    pub(crate) fn opt_span_lint(
+    pub(crate) fn opt_span_lint<'a>(
         &self,
         lint: &'static Lint,
         span: Option<MultiSpan>,
-        msg: impl Into<DiagMessage>,
-        decorate: impl for<'a, 'b> FnOnce(&'b mut Diag<'a, ()>),
+        into_diag: impl IntoDiagnostic<'a, ()>,
     ) {
         let (level, src) = self.lint_level(lint);
-        lint_level(self.sess, lint, level, src, span, msg, decorate)
+        lint_level(self.sess, lint, level, src, span, into_diag)
     }
 
     #[track_caller]
-    pub fn emit_span_lint(
+    pub fn emit_span_lint<'a>(
         &self,
         lint: &'static Lint,
         span: MultiSpan,
-        decorate: impl for<'a> DecorateLint<'a, ()>,
+        into_diag: impl IntoDiagnostic<'a, ()>,
     ) {
         let (level, src) = self.lint_level(lint);
-        lint_level(self.sess, lint, level, src, Some(span), decorate.msg(), |lint| {
-            decorate.decorate_lint(lint);
-        });
+        lint_level(self.sess, lint, level, src, Some(span), into_diag);
     }
 
     #[track_caller]
-    pub fn emit_lint(&self, lint: &'static Lint, decorate: impl for<'a> DecorateLint<'a, ()>) {
+    pub fn emit_lint<'a>(&self, lint: &'static Lint, into_diag: impl IntoDiagnostic<'a, ()>) {
         let (level, src) = self.lint_level(lint);
-        lint_level(self.sess, lint, level, src, None, decorate.msg(), |lint| {
-            decorate.decorate_lint(lint);
-        });
+        lint_level(self.sess, lint, level, src, None, into_diag);
     }
 }
 

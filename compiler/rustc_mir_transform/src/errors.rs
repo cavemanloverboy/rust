@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
 use rustc_errors::{
-    codes::*, Applicability, DecorateLint, Diag, DiagArgValue, DiagCtxt, DiagMessage,
-    EmissionGuarantee, IntoDiagnostic, Level,
+    codes::*, Applicability, Diag, DiagArgValue, DiagCtxt, DiagMessage, EmissionGuarantee,
+    IntoDiagnostic, Level,
 };
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::mir::{AssertKind, UnsafetyViolationDetails};
 use rustc_middle::ty::TyCtxt;
 use rustc_session::lint::{self, Lint};
@@ -13,7 +13,7 @@ use rustc_span::Span;
 
 use crate::fluent_generated as fluent;
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 pub(crate) enum ConstMutate {
     #[diag(mir_transform_const_modify)]
     #[note]
@@ -42,7 +42,7 @@ pub(crate) struct UnalignedPackedRef {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_transform_unused_unsafe)]
 pub(crate) struct UnusedUnsafe {
     #[label(mir_transform_unused_unsafe)]
@@ -241,7 +241,7 @@ impl AssertLintKind {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_transform_ffi_unwind_call)]
 pub(crate) struct FfiUnwindCall {
     #[label(mir_transform_ffi_unwind_call)]
@@ -249,7 +249,7 @@ pub(crate) struct FfiUnwindCall {
     pub foreign: bool,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(mir_transform_fn_item_ref)]
 pub(crate) struct FnItemRef {
     #[suggestion(code = "{sugg}", applicability = "unspecified")]

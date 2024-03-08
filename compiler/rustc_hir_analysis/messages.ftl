@@ -4,6 +4,11 @@ hir_analysis_ambiguous_assoc_item = ambiguous associated {$assoc_kind} `{$assoc_
 hir_analysis_ambiguous_lifetime_bound =
     ambiguous lifetime bound, explicit lifetime bound required
 
+hir_analysis_asm_sub_register = formatting may not be suitable for sub-register argument
+    .label = for this argument
+    .help_1 = use `{"{"}{$idx}:{$suggested_modifier}{"}"}` to have the register formatted as `{$suggested_result}`
+    .help_2 = or use `{"{"}{$idx}:{$default_modifier}{"}"}` to keep the default formatting of `{$default_result}`
+
 hir_analysis_assoc_item_not_found = associated {$assoc_kind} `{$assoc_name}` not found for `{$ty_param_name}`
 
 hir_analysis_assoc_item_not_found_found_in_other_trait_label = there is {$identically_named ->
@@ -202,6 +207,8 @@ hir_analysis_invalid_unnamed_field_ty = unnamed fields can only have struct or u
 
 hir_analysis_late_bound_const_in_apit = `impl Trait` can only mention const parameters from an fn or impl
     .label = const parameter declared here
+
+hir_analysis_late_bound_lifetime_arguments = cannot specify lifetime arguments explicitly if late bound lifetime parameters are present
 
 hir_analysis_late_bound_lifetime_in_apit = `impl Trait` can only mention lifetimes from an fn or impl
     .label = lifetime declared here
@@ -419,6 +426,15 @@ hir_analysis_transparent_enum_variant = transparent enum needs exactly one varia
     .many_label = too many variants in `{$path}`
     .multi_label = variant here
 
+hir_analysis_transparent_external_private_fields =
+    zero-sized fields in `repr(transparent)` cannot contain external non-exhaustive types
+
+hir_analysis_transparent_external_private_fields_exhaustive =
+    this {$descr} contains `{$field_ty}`, which contains private fields, and makes it not a breaking change to become non-zero-sized in the future
+
+hir_analysis_transparent_external_private_fields_non_exhaustive =
+    this {$descr} contains `{$field_ty}`, which is marked with `#[non_exhaustive]`, and makes it not a breaking change to become non-zero-sized in the future
+
 hir_analysis_transparent_non_zero_sized = transparent {$desc} needs at most one field with non-trivial size or alignment, but has {$field_count}
     .label = needs at most one field with non-trivial size or alignment, but has {$field_count}
     .labels = this field has non-zero size or requires alignment
@@ -447,6 +463,9 @@ hir_analysis_typeof_reserved_keyword_used =
 hir_analysis_unconstrained_opaque_type = unconstrained opaque type
     .note = `{$name}` must be used in combination with a concrete type within the same {$what}
 
+hir_analysis_uninhabited_static = static of uninhabited type
+    .note = uninhabited statics cannot be initialized, and any access would be an immediate error
+
 hir_analysis_unnamed_fields_repr_field_defined = unnamed field defined here
 
 hir_analysis_unnamed_fields_repr_field_missing_repr_c =
@@ -468,6 +487,9 @@ hir_analysis_unrecognized_intrinsic_function =
     unrecognized intrinsic function: `{$name}`
     .label = unrecognized intrinsic
     .help = if you're adding an intrinsic, be sure to update `check_intrinsic_type`
+
+hir_analysis_unsupported_calling_conventions =
+    use of calling convention not supported on this target
 
 hir_analysis_unused_associated_type_bounds =
     unnecessary associated type bound for not object safe associated type

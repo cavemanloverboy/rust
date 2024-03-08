@@ -4,8 +4,9 @@ use crate::fluent_generated as fluent;
 use rustc_errors::{
     codes::*, Applicability, Diag, DiagCtxt, EmissionGuarantee, IntoDiagnostic, Level, MultiSpan,
 };
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
-use rustc_middle::ty::Ty;
+use rustc_hir::def_id::DefId;
+use rustc_macros::{Diagnostic, Subdiagnostic};
+use rustc_middle::ty::{GenericArg, Ty, TyCtxt};
 use rustc_span::{symbol::Ident, Span, Symbol};
 
 #[derive(Diagnostic)]
@@ -1061,7 +1062,7 @@ pub(crate) enum LateBoundInApit {
     },
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_analysis_unused_associated_type_bounds)]
 #[note]
 pub struct UnusedAssociatedTypeBounds {
@@ -1069,7 +1070,7 @@ pub struct UnusedAssociatedTypeBounds {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_analysis_rpitit_refined)]
 #[note]
 pub(crate) struct ReturnPositionImplTraitInTraitRefined<'tcx> {
@@ -1491,7 +1492,7 @@ pub enum StaticMutRefSugg {
 }
 
 // STATIC_MUT_REF lint
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_analysis_static_mut_refs_lint)]
 #[note]
 #[note(hir_analysis_why_note)]
@@ -1607,3 +1608,61 @@ pub struct UnnamedFieldsReprFieldDefined {
     #[primary_span]
     pub span: Span,
 }
+
+#[derive(Diagnostic)]
+#[diag(hir_analysis_unsupported_calling_conventions)]
+pub struct UnsupportedCallingConventions;
+
+#[derive(Diagnostic)]
+#[diag(hir_analysis_uninhabited_static)]
+#[note]
+pub struct UninhabitedStatic;
+
+pub enum TransparentExternalPrivateFieldsKind {
+    NonExhaustive,
+    Exhaustive,
+}
+
+pub struct TransparentExternalPrivateFields<'tcx, 'a> {
+    pub kind: TransparentExternalPrivateFieldsKind,
+    pub tcx: TyCtxt<'tcx>,
+    pub def_id: DefId,
+    pub args: &'tcx [GenericArg<'tcx>],
+    pub descr: &'a str,
+}
+
+impl<'tcx, 'a> IntoDiagnostic<'tcx, ()> for TransparentExternalPrivateFields<'tcx, 'a> {
+    fn into_diagnostic(self, dcx: &'tcx DiagCtxt, level: Level) -> Diag<'tcx, ()> {
+        let mut diag =
+            Diag::new(dcx, level, fluent::hir_analysis_transparent_external_private_fields);
+        diag.arg("descr", self.descr);
+        diag.arg("field_ty", self.tcx.def_path_str_with_args(self.def_id, self.args));
+        match self.kind {
+            TransparentExternalPrivateFieldsKind::Exhaustive => {
+                diag.note(fluent::hir_analysis_transparent_external_private_fields_exhaustive);
+            }
+            TransparentExternalPrivateFieldsKind::NonExhaustive => {
+                diag.note(fluent::hir_analysis_transparent_external_private_fields_non_exhaustive);
+            }
+        }
+        diag
+    }
+}
+
+#[derive(Diagnostic)]
+#[diag(hir_analysis_asm_sub_register)]
+#[help(hir_analysis_help_1)]
+#[help(hir_analysis_help_2)]
+pub struct AsmSubRegister<'a> {
+    #[label]
+    pub this_argument: Span,
+    pub idx: usize,
+    pub suggested_modifier: char,
+    pub suggested_result: &'a str,
+    pub default_modifier: char,
+    pub default_result: &'a str,
+}
+
+#[derive(Diagnostic)]
+#[diag(hir_analysis_late_bound_lifetime_arguments)]
+pub struct LateBoundLifetimeArguments;

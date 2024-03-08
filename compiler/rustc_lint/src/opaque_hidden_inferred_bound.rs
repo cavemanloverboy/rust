@@ -1,6 +1,6 @@
 use rustc_hir as hir;
 use rustc_infer::infer::TyCtxtInferExt;
-use rustc_macros::{LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::ty::{
     self, fold::BottomUpFolder, print::TraitPredPrintModifiersAndPath, Ty, TypeFoldable,
 };
@@ -179,7 +179,7 @@ impl<'tcx> LateLintPass<'tcx> for OpaqueHiddenInferredBound {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(lint_opaque_hidden_inferred_bound)]
 struct OpaqueHiddenInferredBoundLint<'tcx> {
     ty: Ty<'tcx>,

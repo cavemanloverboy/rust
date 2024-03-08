@@ -5,6 +5,7 @@ use crate::query::TyCtxtEnsure;
 use crate::ty::visit::TypeVisitableExt;
 use crate::ty::GenericArgs;
 use crate::ty::{self, TyCtxt};
+use rustc_errors::{Diag, DiagCtxt, IntoDiagnostic, Level};
 use rustc_hir::def::DefKind;
 use rustc_hir::def_id::DefId;
 use rustc_session::lint;
@@ -108,12 +109,19 @@ impl<'tcx> TyCtxt<'tcx> {
                         let mir_body = self.mir_for_ctfe(instance.def_id());
                         if mir_body.is_polymorphic {
                             let Some(local_def_id) = ct.def.as_local() else { return };
+                            struct ConstEvalUnchecked;
+
+                            impl<'a> IntoDiagnostic<'a, ()> for ConstEvalUnchecked {
+                                fn into_diagnostic(self, dcx: &'a DiagCtxt, level: Level) -> Diag<'a, ()> {
+                                    Diag::new(dcx, level, "cannot use constants which depend on generic parameters in types")
+                                }
+                            }
+
                             self.node_span_lint(
                                 lint::builtin::CONST_EVALUATABLE_UNCHECKED,
                                 self.local_def_id_to_hir_id(local_def_id),
                                 self.def_span(ct.def),
-                                "cannot use constants which depend on generic parameters in types",
-                                |_| {},
+                                ConstEvalUnchecked,
                             )
                         }
                     }

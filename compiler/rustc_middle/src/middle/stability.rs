@@ -9,7 +9,7 @@ use rustc_attr::{
     self as attr, ConstStability, DefaultBodyStability, DeprecatedSince, Deprecation, Stability,
 };
 use rustc_data_structures::unord::UnordMap;
-use rustc_errors::{Applicability, Diag};
+use rustc_errors::{Applicability, Diag, DiagCtxt, IntoDiagnostic, Level as ErrLevel};
 use rustc_feature::GateIssue;
 use rustc_hir::def::DefKind;
 use rustc_hir::def_id::{DefId, LocalDefId, LocalDefIdMap};
@@ -217,12 +217,33 @@ fn late_report_deprecation(
         return;
     }
     let method_span = method_span.unwrap_or(span);
-    tcx.node_span_lint(lint, hir_id, method_span, message, |diag| {
-        if let hir::Node::Expr(_) = tcx.hir_node(hir_id) {
-            let kind = tcx.def_descr(def_id);
-            deprecation_suggestion(diag, kind, suggestion, method_span);
+
+    struct LateReport<'a> {
+        tcx: TyCtxt<'a>,
+        hir_id: HirId,
+        def_id: DefId,
+        suggestion: Option<Symbol>,
+        method_span: Span,
+        message: String,
+    }
+
+    impl<'tcx, 'a> IntoDiagnostic<'a, ()> for LateReport<'tcx> {
+        fn into_diagnostic(self, dcx: &'a DiagCtxt, level: ErrLevel) -> Diag<'a, ()> {
+            let mut diag = Diag::new(dcx, level, self.message);
+            if let hir::Node::Expr(_) = self.tcx.hir_node(self.hir_id) {
+                let kind = self.tcx.def_descr(self.def_id);
+                deprecation_suggestion(&mut diag, kind, self.suggestion, self.method_span);
+            }
+            diag
         }
-    });
+    }
+
+    tcx.node_span_lint(
+        lint,
+        hir_id,
+        method_span,
+        LateReport { tcx, hir_id, def_id, suggestion, method_span, message },
+    );
 }
 
 /// Result of `TyCtxt::eval_stability`.
@@ -585,7 +606,15 @@ impl<'tcx> TyCtxt<'tcx> {
         unmarked: impl FnOnce(Span, DefId),
     ) -> bool {
         let soft_handler = |lint, span, msg: String| {
-            self.node_span_lint(lint, id.unwrap_or(hir::CRATE_HIR_ID), span, msg, |_| {})
+            struct SoftLint(String);
+
+            impl<'a> IntoDiagnostic<'a, ()> for SoftLint {
+                fn into_diagnostic(self, dcx: &'a DiagCtxt, level: ErrLevel) -> Diag<'a, ()> {
+                    Diag::new(dcx, level, self.0)
+                }
+            }
+
+            self.node_span_lint(lint, id.unwrap_or(hir::CRATE_HIR_ID), span, SoftLint(msg))
         };
         let eval_result =
             self.eval_stability_allow_unstable(def_id, id, span, method_span, allow_unstable);

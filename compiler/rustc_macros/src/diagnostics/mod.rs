@@ -4,7 +4,7 @@ mod error;
 mod subdiagnostic;
 mod utils;
 
-use diagnostic::{DiagnosticDerive, LintDiagnosticDerive};
+use diagnostic::DiagnosticDerive;
 use proc_macro2::TokenStream;
 use subdiagnostic::SubdiagnosticDeriveBuilder;
 use synstructure::Structure;
@@ -58,53 +58,6 @@ use synstructure::Structure;
 pub fn session_diagnostic_derive(mut s: Structure<'_>) -> TokenStream {
     s.underscore_const(true);
     DiagnosticDerive::new(s).into_tokens()
-}
-
-/// Implements `#[derive(LintDiagnostic)]`, which allows for lints to be specified as a struct,
-/// independent from the actual lint emitting code.
-///
-/// ```ignore (rust)
-/// #[derive(LintDiagnostic)]
-/// #[diag(lint_atomic_ordering_invalid_fail_success)]
-/// pub struct AtomicOrderingInvalidLint {
-///     method: Symbol,
-///     success_ordering: Symbol,
-///     fail_ordering: Symbol,
-///     #[label(fail_label)]
-///     fail_order_arg_span: Span,
-///     #[label(success_label)]
-///     #[suggestion(
-///         code = "std::sync::atomic::Ordering::{success_suggestion}",
-///         applicability = "maybe-incorrect"
-///     )]
-///     success_order_arg_span: Span,
-/// }
-/// ```
-///
-/// ```fluent
-/// lint_atomic_ordering_invalid_fail_success = `{$method}`'s success ordering must be at least as strong as its failure ordering
-///     .fail_label = `{$fail_ordering}` failure ordering
-///     .success_label = `{$success_ordering}` success ordering
-///     .suggestion = consider using `{$success_suggestion}` success ordering instead
-/// ```
-///
-/// Then, later, to emit the error:
-///
-/// ```ignore (rust)
-/// cx.span_lint(INVALID_ATOMIC_ORDERING, fail_order_arg_span, AtomicOrderingInvalidLint {
-///     method,
-///     success_ordering,
-///     fail_ordering,
-///     fail_order_arg_span,
-///     success_order_arg_span,
-/// });
-/// ```
-///
-/// See rustc dev guide for more examples on using the `#[derive(LintDiagnostic)]`:
-/// <https://rustc-dev-guide.rust-lang.org/diagnostics/diagnostic-structs.html#reference>
-pub fn lint_diagnostic_derive(mut s: Structure<'_>) -> TokenStream {
-    s.underscore_const(true);
-    LintDiagnosticDerive::new(s).into_tokens()
 }
 
 /// Implements `#[derive(Subdiagnostic)]`, which allows for labels, notes, helps and

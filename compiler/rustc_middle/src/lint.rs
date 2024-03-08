@@ -2,7 +2,7 @@ use std::cmp;
 
 use rustc_data_structures::fx::FxIndexMap;
 use rustc_data_structures::sorted_map::SortedMap;
-use rustc_errors::{Diag, DiagMessage, MultiSpan};
+use rustc_errors::{Diag, IntoDiagnostic, MultiSpan};
 use rustc_hir::{HirId, ItemLocalId};
 use rustc_session::lint::{
     builtin::{self, FORBIDDEN_LINT_GROUPS},
@@ -262,27 +262,19 @@ pub fn explain_lint_level_source(
 ///
 /// It is not intended to call `emit`/`cancel` on the `Diag` passed in the `decorate` callback.
 #[track_caller]
-pub fn lint_level(
-    sess: &Session,
+pub fn lint_level<'sess>(
+    sess: &'sess Session,
     lint: &'static Lint,
     level: Level,
     src: LintLevelSource,
     span: Option<MultiSpan>,
-    msg: impl Into<DiagMessage>,
-    decorate: impl for<'a, 'b> FnOnce(&'b mut Diag<'a, ()>),
+    into_diag: impl IntoDiagnostic<'sess, ()>,
 ) {
-    // Avoid codegen bloat from monomorphization by immediately doing dyn dispatch of `decorate` to
-    // the "real" work.
-    #[track_caller]
-    fn lint_level_impl(
-        sess: &Session,
+    fn lint_level_to_err_level<'sess>(
+        sess: &'sess Session,
         lint: &'static Lint,
         level: Level,
-        src: LintLevelSource,
-        span: Option<MultiSpan>,
-        msg: impl Into<DiagMessage>,
-        decorate: Box<dyn '_ + for<'a, 'b> FnOnce(&'b mut Diag<'a, ()>)>,
-    ) {
+    ) -> Option<(rustc_errors::Level, bool)> {
         // Check for future incompatibility lints and issue a stronger warning.
         let future_incompatible = lint.future_incompatible;
 
@@ -303,7 +295,7 @@ pub fn lint_level(
                 if has_future_breakage {
                     rustc_errors::Level::Allow
                 } else {
-                    return;
+                    return None;
                 }
             }
             Level::Expect(expect_id) => {
@@ -321,7 +313,19 @@ pub fn lint_level(
             Level::Warn => rustc_errors::Level::Warning,
             Level::Deny | Level::Forbid => rustc_errors::Level::Error,
         };
-        let mut err = Diag::new(sess.dcx(), err_level, "");
+        Some((err_level, has_future_breakage))
+    }
+
+    #[track_caller]
+    fn lint_level_impl<'sess>(
+        sess: &'sess Session,
+        lint: &'static Lint,
+        level: Level,
+        src: LintLevelSource,
+        span: Option<MultiSpan>,
+        mut err: Diag<'_, ()>,
+        has_future_breakage: bool,
+    ) {
         if let Some(span) = span {
             err.span(span);
         }
@@ -338,7 +342,8 @@ pub fn lint_level(
             // it'll become a hard error, so we have to emit *something*. Also,
             // if this lint occurs in the expansion of a macro from an external crate,
             // allow individual lints to opt-out from being reported.
-            let incompatible = future_incompatible.is_some_and(|f| f.reason.edition().is_none());
+            let incompatible =
+                lint.future_incompatible.is_some_and(|f| f.reason.edition().is_none());
 
             if !incompatible && !lint.report_in_external_macro {
                 err.cancel();
@@ -349,10 +354,6 @@ pub fn lint_level(
             }
         }
 
-        // Delay evaluating and setting the primary message until after we've
-        // suppressed the lint due to macros.
-        err.primary_message(msg);
-
         err.is_lint(lint.name_lower(), has_future_breakage);
 
         // Lint diagnostics that are covered by the expect level will not be emitted outside
@@ -360,12 +361,11 @@ pub fn lint_level(
         // This will therefore directly call the decorate function which will in turn emit
         // the diagnostic.
         if let Level::Expect(_) = level {
-            decorate(&mut err);
             err.emit();
             return;
         }
 
-        if let Some(future_incompatible) = future_incompatible {
+        if let Some(future_incompatible) = lint.future_incompatible {
             let explanation = match future_incompatible.reason {
                 FutureIncompatibilityReason::FutureReleaseErrorDontReportInDeps
                 | FutureIncompatibilityReason::FutureReleaseErrorReportInDeps => {
@@ -398,12 +398,17 @@ pub fn lint_level(
             }
         }
 
-        // Finally, run `decorate`.
-        decorate(&mut err);
         explain_lint_level_source(lint, level, src, &mut err);
         err.emit()
     }
-    lint_level_impl(sess, lint, level, src, span, msg, Box::new(decorate))
+
+    // Avoid codegen bloat from monomorphization by immediately doing dyn dispatch of `into_diag` to
+    // the "real" work.
+    let Some((err_level, has_future_breakage)) = lint_level_to_err_level(sess, lint, level) else {
+        return;
+    };
+    let err = into_diag.into_diagnostic(sess.dcx(), err_level);
+    lint_level_impl(sess, lint, level, src, span, err, has_future_breakage)
 }
 
 /// Returns whether `span` originates in a foreign crate's external macro.

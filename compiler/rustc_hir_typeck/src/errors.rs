@@ -6,7 +6,7 @@ use rustc_errors::{
     codes::*, AddToDiagnostic, Applicability, Diag, DiagArgValue, EmissionGuarantee,
     IntoDiagnosticArg, MultiSpan, SubdiagMessageOp,
 };
-use rustc_macros::{Diagnostic, LintDiagnostic, Subdiagnostic};
+use rustc_macros::{Diagnostic, Subdiagnostic};
 use rustc_middle::ty::Ty;
 use rustc_span::{
     edition::{Edition, LATEST_STABLE_EDITION},
@@ -221,7 +221,7 @@ impl AddToDiagnostic for TypeMismatchFruTypo {
     }
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_typeck_lossy_provenance_int2ptr)]
 #[help]
 pub struct LossyProvenanceInt2Ptr<'tcx> {
@@ -240,7 +240,7 @@ pub struct LossyProvenanceInt2PtrSuggestion {
     pub hi: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_typeck_lossy_provenance_ptr2int)]
 #[help]
 pub struct LossyProvenancePtr2Int<'tcx> {
@@ -486,7 +486,7 @@ pub struct SuggestPtrNullMut {
     pub span: Span,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_typeck_trivial_cast)]
 #[help]
 pub struct TrivialCast<'tcx> {
@@ -527,7 +527,7 @@ pub struct CannotCastToBool<'tcx> {
     pub help: CannotCastToBoolHelp,
 }
 
-#[derive(LintDiagnostic)]
+#[derive(Diagnostic)]
 #[diag(hir_typeck_cast_enum_drop)]
 pub struct CastEnumDrop<'tcx> {
     pub expr_ty: Ty<'tcx>,

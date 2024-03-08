@@ -57,6 +57,9 @@ codegen_ssa_incorrect_cgu_reuse_type =
     *[other] {""}
     }`{$expected_reuse}`
 
+codegen_ssa_inline_no_sanitize = `no_sanitize` will have no effect after inlining
+    .label = inlining requested here
+
 codegen_ssa_insufficient_vs_code_product = VS Code is a different product, and is not sufficient.
 
 codegen_ssa_invalid_link_ordinal_nargs = incorrect number of arguments to `#[link_ordinal]`

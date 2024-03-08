@@ -1,10 +1,13 @@
 use crate::fluent_generated as fluent;
 use rustc_errors::{
-    codes::*, AddToDiagnostic, Applicability, Diag, DiagCtxt, EmissionGuarantee, IntoDiagnostic,
-    Level, SubdiagMessageOp,
+    codes::*, AddToDiagnostic, Applicability, DelayDm, Diag, DiagCtxt, EmissionGuarantee,
+    IntoDiagnostic, Level, MultiSpan, SubdiagMessageOp,
 };
+use rustc_hir::def_id::DefId;
+use rustc_hir::Node;
+use rustc_infer::traits::ObjectSafetyViolation;
 use rustc_macros::Diagnostic;
-use rustc_middle::ty::{self, ClosureKind, PolyTraitRef, Ty};
+use rustc_middle::ty::{self, ClosureKind, PolyTraitRef, Ty, TyCtxt};
 use rustc_span::{Span, Symbol};
 
 #[derive(Diagnostic)]
@@ -169,4 +172,51 @@ pub(crate) struct AsyncClosureNotFn {
     #[primary_span]
     pub span: Span,
     pub kind: &'static str,
+}
+
+pub(crate) struct ObjectUnsafety<'tcx, 'a> {
+    pub tcx: TyCtxt<'tcx>,
+    pub span: Span,
+    pub trait_def_id: DefId,
+    pub violation: &'a ObjectSafetyViolation,
+}
+
+impl<'tcx, 'a> IntoDiagnostic<'tcx, ()> for ObjectUnsafety<'tcx, 'a> {
+    fn into_diagnostic(self, dcx: &'tcx DiagCtxt, level: Level) -> Diag<'tcx, ()> {
+        let mut err = Diag::new(
+            dcx,
+            level,
+            DelayDm(|| {
+                format!(
+                    "the trait `{}` cannot be made into an object",
+                    self.tcx.def_path_str(self.trait_def_id)
+                )
+            }),
+        );
+        let node = self.tcx.hir().get_if_local(self.trait_def_id);
+        let mut spans = MultiSpan::from_span(self.span);
+        if let Some(Node::Item(item)) = node {
+            spans.push_span_label(item.ident.span, "this trait cannot be made into an object...");
+            spans.push_span_label(self.span, format!("...because {}", self.violation.error_msg()));
+        } else {
+            spans.push_span_label(
+                self.span,
+                format!(
+                    "the trait cannot be made into an object because {}",
+                    self.violation.error_msg()
+                ),
+            );
+        };
+        err.span_note(
+            spans,
+            "for a trait to be \"object safe\" it needs to allow building a vtable to allow the \
+            call to be resolvable dynamically; for more information visit \
+            <https://doc.rust-lang.org/reference/items/traits.html#object-safety>",
+        );
+        if node.is_some() {
+            // Only provide the help if its a local trait, otherwise it's not
+            self.violation.solution().add_to(&mut err);
+        }
+        err
+    }
 }

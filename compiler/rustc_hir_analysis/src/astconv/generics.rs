@@ -3,11 +3,11 @@ use crate::astconv::{
     errors::prohibit_assoc_ty_binding, CreateInstantiationsForGenericArgsCtxt, ExplicitLateBound,
     GenericArgCountMismatch, GenericArgCountResult, GenericArgPosition,
 };
+use crate::errors::LateBoundLifetimeArguments;
+use crate::fluent_generated as fluent;
 use crate::structured_errors::{GenericArgsInfo, StructuredDiag, WrongNumberOfGenericArgs};
 use rustc_ast::ast::ParamKindOrd;
-use rustc_errors::{
-    codes::*, struct_span_code_err, Applicability, Diag, ErrorGuaranteed, MultiSpan,
-};
+use rustc_errors::{codes::*, struct_span_code_err, Applicability, Diag, MultiSpan};
 use rustc_hir as hir;
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::def_id::DefId;
@@ -17,6 +17,7 @@ use rustc_middle::ty::{
 };
 use rustc_session::lint::builtin::LATE_BOUND_LIFETIME_ARGUMENTS;
 use rustc_span::symbol::kw;
+use rustc_span::ErrorGuaranteed;
 use smallvec::SmallVec;
 
 /// Report an error that a generic argument did not match the generic parameter that was
@@ -632,15 +633,15 @@ pub(crate) fn prohibit_explicit_late_bound_lifetimes(
     }
 
     if let Some(span_late) = def.has_late_bound_regions {
-        let msg = "cannot specify lifetime arguments explicitly \
-                       if late bound lifetime parameters are present";
         let note = "the late bound lifetime parameter is introduced here";
         let span = args.args[0].span();
 
         if position == GenericArgPosition::Value
             && args.num_lifetime_params() != param_counts.lifetimes
         {
-            struct_span_code_err!(tcx.dcx(), span, E0794, "{}", msg)
+            tcx.dcx()
+                .struct_span_err(span, fluent::hir_analysis_late_bound_lifetime_arguments)
+                .code(E0794)
                 .with_span_note(span_late, note)
                 .emit();
         } else {
@@ -650,8 +651,7 @@ pub(crate) fn prohibit_explicit_late_bound_lifetimes(
                 LATE_BOUND_LIFETIME_ARGUMENTS,
                 args.args[0].hir_id(),
                 multispan,
-                msg,
-                |_| {},
+                LateBoundLifetimeArguments,
             );
         }
 

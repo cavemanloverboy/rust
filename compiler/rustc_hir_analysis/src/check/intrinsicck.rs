@@ -8,6 +8,8 @@ use rustc_span::Symbol;
 use rustc_target::abi::FieldIdx;
 use rustc_target::asm::{InlineAsmReg, InlineAsmRegClass, InlineAsmRegOrRegClass, InlineAsmType};
 
+use crate::errors::AsmSubRegister;
+
 pub struct InlineAsmCtxt<'a, 'tcx> {
     tcx: TyCtxt<'tcx>,
     param_env: ty::ParamEnv<'tcx>,
@@ -274,15 +276,13 @@ impl<'a, 'tcx> InlineAsmCtxt<'a, 'tcx> {
                     lint::builtin::ASM_SUB_REGISTER,
                     expr.hir_id,
                     spans,
-                    "formatting may not be suitable for sub-register argument",
-                    |lint| {
-                        lint.span_label(expr.span, "for this argument");
-                        lint.help(format!(
-                            "use `{{{idx}:{suggested_modifier}}}` to have the register formatted as `{suggested_result}`",
-                        ));
-                        lint.help(format!(
-                            "or use `{{{idx}:{default_modifier}}}` to keep the default formatting of `{default_result}`",
-                        ));
+                    AsmSubRegister {
+                        this_argument: expr.span,
+                        idx,
+                        suggested_modifier,
+                        suggested_result,
+                        default_modifier,
+                        default_result,
                     },
                 );
             }
